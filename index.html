@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Firma Digitale Docente - UniMol</title>
+  <style>
+    * { box-sizing: border-box; touch-action: none; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f9; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 480px; padding: 20px; text-align: center; }
+    h2 { margin-top: 0; color: #003366; font-size: 18px; }
+    p { color: #666; font-size: 13px; margin-bottom: 15px; }
+    
+    .canvas-container { border: 2px dashed #003366; border-radius: 8px; background: #fff; margin-bottom: 15px; position: relative; }
+    canvas { width: 100%; height: 180px; border-radius: 6px; cursor: crosshair; }
+    
+    .btn-group { display: flex; gap: 10px; }
+    button { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; }
+    .btn-clear { background: #e2e8f0; color: #4a5568; }
+    .btn-send { background: #28a745; color: white; }
+    #status { margin-top: 15px; font-weight: bold; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>✍️ Firma Attestato UniMol</h2>
+  <p id="docenteLabel">Traccia la tua firma all'interno del riquadro sottostante usando il dito o un pennino.</p>
+
+  <div class="canvas-container">
+    <canvas id="sigCanvas"></canvas>
+  </div>
+
+  <div class="btn-group">
+    <button type="button" class="btn-clear" onclick="clearCanvas()">Cancella</button>
+    <button type="button" class="btn-send" onclick="submitSignature()">Invia Firma</button>
+  </div>
+
+  <div id="status"></div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const insegnamento = urlParams.get('insegnamento') || '';
+  const docente = urlParams.get('docente') || '';
+  const scriptUrl = urlParams.get('api') || '';
+
+  if (docente) {
+    document.getElementById('docenteLabel').innerHTML = `Firma per: <b>${docente}</b><br><small>${insegnamento}</small>`;
+  }
+
+  const canvas = document.getElementById('sigCanvas');
+  const ctx = canvas.getContext('2d');
+  let isDrawing = false;
+  let hasDrawn = false;
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * 2;
+    canvas.height = rect.height * 2;
+    ctx.scale(2, 2);
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#000080';
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function startDrawing(e) {
+    isDrawing = true;
+    hasDrawn = true;
+    const pos = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  }
+
+  function draw(e) {
+    if (!isDrawing) return;
+    const pos = getPos(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  }
+
+  function stopDrawing() { isDrawing = false; }
+
+  canvas.addEventListener('mousedown', startDrawing);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', stopDrawing);
+
+  canvas.addEventListener('touchstart', startDrawing);
+  canvas.addEventListener('touchmove', draw);
+  canvas.addEventListener('touchend', stopDrawing);
+
+  function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasDrawn = false;
+    document.getElementById('status').innerText = '';
+  }
+
+  function submitSignature() {
+    if (!hasDrawn) {
+      alert("Traccia prima la tua firma nel riquadro!");
+      return;
+    }
+
+    if (!scriptUrl) {
+      alert("Errore: URL API non presente nei parametri.");
+      return;
+    }
+
+    const statusDiv = document.getElementById('status');
+    statusDiv.style.color = '#003366';
+    statusDiv.innerText = "Invio della firma in corso...";
+
+    const base64Data = canvas.toDataURL('image/png');
+
+    fetch(scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        insegnamento: insegnamento,
+        docente: docente,
+        image: base64Data
+      })
+    }).then(() => {
+      statusDiv.style.color = '#28a745';
+      statusDiv.innerHTML = "✅ Firma registrata con successo!<br>Puoi chiudere questa pagina.";
+    }).catch(err => {
+      statusDiv.style.color = 'red';
+      statusDiv.innerText = "Errore durante l'invio. Riprova.";
+    });
+  }
+</script>
+</body>
+</html>
