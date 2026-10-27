@@ -2,25 +2,42 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Firma Digitale Docente - UniMol</title>
   <style>
-    * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* Permettiamo lo scroll nativo su tutta la pagina */
     html, body { 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
       background: #f4f6f9; 
       color: #333; 
       width: 100%;
-      height: 100%;
-      overflow-y: auto; /* Permette lo scroll se lo schermo è molto basso */
+      min-height: 100vh;
+      overflow-y: auto; 
+      -webkit-overflow-scrolling: touch;
     }
     
     body {
-      padding: 10px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+    }
+
+    /* Box avviso rotazione consiglio */
+    .rotate-tip {
+      background: #e2e8f0;
+      color: #003366;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      text-align: center;
+      width: 100%;
+      max-width: 650px;
+      margin-bottom: 10px;
+      font-weight: 600;
     }
     
     .card { 
@@ -29,27 +46,26 @@
       box-shadow: 0 4px 14px rgba(0,0,0,0.08); 
       width: 100%; 
       max-width: 650px; 
-      padding: 12px 16px; 
+      padding: 16px; 
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
+      margin-bottom: 30px; /* Spazio extra in fondo per scorrere comodamente */
     }
 
     .header-info { text-align: center; }
-    .header-info h2 { font-size: 16px; color: #003366; }
-    .header-info p { font-size: 11px; color: #666; }
+    .header-info h2 { font-size: 17px; color: #003366; margin-bottom: 2px; }
+    .header-info p { font-size: 12px; color: #666; }
 
-    /* Canvas flessibile: si adatta all'altezza dello schermo */
+    /* Riquadro firma con dimensione generosa */
     .canvas-container { 
       border: 2px dashed #003366; 
       border-radius: 8px; 
       background: #ffffff; 
       width: 100%; 
-      height: 45vh; /* Usa il 45% dell'altezza dello schermo disponibile */
-      min-height: 140px;
-      max-height: 280px;
+      height: 220px; 
       position: relative;
-      touch-action: none;
+      touch-action: none; /* Impedisce lo scroll della pagina mentre si firma */
     }
     
     canvas { 
@@ -62,44 +78,42 @@
 
     .btn-group { 
       display: flex; 
-      gap: 10px; 
+      gap: 12px; 
       width: 100%;
-      margin-top: 4px;
+      margin-top: 8px;
     }
     
     button { 
       flex: 1; 
-      padding: 12px; 
+      padding: 14px; 
       border: none; 
       border-radius: 8px; 
       font-weight: bold; 
-      font-size: 14px; 
+      font-size: 15px; 
       cursor: pointer; 
       touch-action: manipulation;
     }
     
     .btn-clear { background: #e2e8f0; color: #4a5568; }
+    .btn-clear:active { background: #cbd5e0; }
+    
     .btn-send { background: #28a745; color: #ffffff; }
+    .btn-send:active { background: #218838; }
 
     #status { 
       text-align: center; 
       font-weight: bold; 
-      font-size: 12px; 
-      min-height: 16px;
-    }
-
-    /* Ottimizzazione specifica quando il telefono viene ruotato in orizzontale */
-    @media (orientation: landscape) and (max-height: 500px) {
-      body { padding: 5px; justify-content: flex-start; }
-      .card { padding: 8px 12px; gap: 4px; }
-      .header-info h2 { font-size: 14px; }
-      .header-info p { display: none; } /* Nasconde il sottotitolo per guadagnare spazio */
-      .canvas-container { height: 55vh; min-height: 120px; }
-      button { padding: 8px; font-size: 13px; }
+      font-size: 13px; 
+      min-height: 18px;
     }
   </style>
 </head>
 <body>
+
+  <!-- Messaggio di consiglio orientamento -->
+  <div class="rotate-tip">
+    💡 <b>Consiglio:</b> Ruota lo smartphone in orizzontale per firmare più agevolmente. Scorri in basso per i pulsanti.
+  </div>
 
   <div class="card">
     <div class="header-info">
@@ -139,6 +153,7 @@
     const rect = canvas.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
     
+    // Configurazione alta risoluzione retina/mobile
     canvas.width = rect.width * 2;
     canvas.height = rect.height * 2;
     ctx.scale(2, 2);
@@ -149,11 +164,10 @@
   }
 
   window.addEventListener('load', initCanvas);
+  
+  // Inizializza la tela al cambio orientamento preservando la firma se già tracciata
   window.addEventListener('resize', () => {
     if (!hasDrawn) initCanvas();
-  });
-  window.addEventListener('orientationchange', () => {
-    setTimeout(initCanvas, 200);
   });
 
   function getPos(e) {
@@ -176,7 +190,7 @@
     const pos = getPos(e);
     ctx.lineTo(pos.x, pos.y);
     ctx.stroke();
-    e.preventDefault();
+    e.preventDefault(); // Blocca lo scroll di pagina SOLO quando il dito traccia sul canvas
   }
 
   function stopDrawing() { isDrawing = false; }
@@ -202,7 +216,7 @@
     }
 
     if (!scriptUrl) {
-      alert("Errore: URL API mancante.");
+      alert("Errore: URL API mancante nei parametri.");
       return;
     }
 
