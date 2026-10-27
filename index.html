@@ -2,76 +2,106 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Firma Digitale Docente - UniMol</title>
   <style>
     * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1a202c; color: #fff; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-    
-    /* Overlay che appare solo se il telefono è in verticale */
-    #rotateWarning {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: #003366; z-index: 999;
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      text-align: center; padding: 20px;
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      background: #f4f6f9; 
+      color: #333; 
+      padding: 12px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    #rotateWarning.hidden { display: none; }
-    .rotate-icon { font-size: 50px; margin-bottom: 15px; animation: rotateAnim 2s infinite ease-in-out; }
-    @keyframes rotateAnim {
-      0% { transform: rotate(0deg); }
-      50% { transform: rotate(90deg); }
-      100% { transform: rotate(90deg); }
-    }
-    #rotateWarning h3 { font-size: 20px; margin-bottom: 8px; }
-    #rotateWarning p { font-size: 14px; opacity: 0.8; }
-
-    /* Interfaccia orizzontale full screen */
-    .app-container { display: flex; flex-direction: column; height: 100vh; padding: 10px 15px; background: #f4f6f9; color: #333; }
     
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .header-info { text-align: left; }
-    .header-info h2 { font-size: 15px; color: #003366; }
-    .header-info p { font-size: 11px; color: #666; }
+    .card { 
+      background: #ffffff; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08); 
+      width: 100%; 
+      max-width: 600px; 
+      padding: 16px; 
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-    .canvas-container { flex: 1; border: 2px dashed #003366; border-radius: 8px; background: #ffffff; position: relative; width: 100%; }
-    canvas { width: 100%; height: 100%; border-radius: 6px; cursor: crosshair; }
+    .header-info { text-align: center; }
+    .header-info h2 { font-size: 17px; color: #003366; margin-bottom: 2px; }
+    .header-info p { font-size: 12px; color: #666; }
 
-    .footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 15px; }
-    .btn-group { display: flex; gap: 10px; flex: 1; }
-    button { flex: 1; padding: 10px 15px; border: none; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; }
-    .btn-clear { background: #cbd5e0; color: #2d3748; }
-    .btn-send { background: #28a745; color: white; }
-    #status { font-weight: bold; font-size: 12px; white-space: nowrap; }
+    /* Riquadro canvas fisso in formato orizzontale (rettangolare allungato) */
+    .canvas-container { 
+      border: 2px dashed #003366; 
+      border-radius: 8px; 
+      background: #ffffff; 
+      width: 100%; 
+      height: 220px; 
+      position: relative;
+      touch-action: none;
+    }
+    
+    canvas { 
+      width: 100%; 
+      height: 100%; 
+      border-radius: 6px; 
+      cursor: crosshair; 
+      display: block;
+    }
+
+    /* Pulsanti sempre visibili e ben distanziati */
+    .btn-group { 
+      display: flex; 
+      gap: 12px; 
+      width: 100%;
+      margin-top: 4px;
+    }
+    
+    button { 
+      flex: 1; 
+      padding: 14px; 
+      border: none; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      font-size: 15px; 
+      cursor: pointer; 
+      touch-action: manipulation;
+    }
+    
+    .btn-clear { background: #e2e8f0; color: #4a5568; }
+    .btn-clear:active { background: #cbd5e0; }
+    
+    .btn-send { background: #28a745; color: #ffffff; }
+    .btn-send:active { background: #218838; }
+
+    #status { 
+      text-align: center; 
+      font-weight: bold; 
+      font-size: 13px; 
+      min-height: 18px;
+    }
   </style>
 </head>
 <body>
 
-  <!-- SCHERMATA DI AVVISO IN CASO DI DISPOSITIVO VERTICALE -->
-  <div id="rotateWarning">
-    <div class="rotate-icon">📱 ➔ 🔄</div>
-    <h3>Ruota il dispositivo in Orizzontale</h3>
-    <p>Per firmare agevolmente, per favore ruota lo smartphone di lato.</p>
-  </div>
-
-  <!-- INTERFACCIA PRINCIPALE DI FIRMA -->
-  <div class="app-container">
-    <div class="header">
-      <div class="header-info">
-        <h2 id="docenteTitle">✍️ Firma Attestato UniMol</h2>
-        <p id="insegnamentoSub">Traccia la tua firma con il dito sull'intera superficie bianca</p>
-      </div>
-      <div id="status"></div>
+  <div class="card">
+    <div class="header-info">
+      <h2 id="docenteTitle">✍️ Firma Attestato UniMol</h2>
+      <p id="insegnamentoSub">Traccia la tua firma con il dito nel riquadro orizzontale</p>
     </div>
 
     <div class="canvas-container">
       <canvas id="sigCanvas"></canvas>
     </div>
 
-    <div class="footer">
-      <div class="btn-group">
-        <button type="button" class="btn-clear" onclick="clearCanvas()">❌ Cancella</button>
-        <button type="button" class="btn-send" onclick="submitSignature()">✅ Invia Firma</button>
-      </div>
+    <div id="status"></div>
+
+    <div class="btn-group">
+      <button type="button" class="btn-clear" onclick="clearCanvas()">❌ Cancella</button>
+      <button type="button" class="btn-send" onclick="submitSignature()">✅ Invia Firma</button>
     </div>
   </div>
 
@@ -88,43 +118,11 @@
 
   const canvas = document.getElementById('sigCanvas');
   const ctx = canvas.getContext('2d');
-  const rotateWarning = document.getElementById('rotateWarning');
   let isDrawing = false;
   let hasDrawn = false;
 
-  // Gestione dell'orientamento dello schermo
-  function checkOrientation() {
-    const isPortrait = window.innerHeight > window.innerWidth;
-    if (isPortrait) {
-      rotateWarning.classList.remove('hidden');
-    } else {
-      rotateWarning.classList.add('hidden');
-      setTimeout(resizeCanvas, 100); // Ricalcola la tela dopo la rotazione
-    }
-  }
-
-  // Tenta di forzare la rotazione automatica ove supportato (Chrome Android)
-  if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock('landscape').catch(() => {});
-  }
-
-  window.addEventListener('resize', () => {
-    checkOrientation();
-    resizeCanvas();
-  });
-  window.addEventListener('orientationchange', checkOrientation);
-
-  function resizeCanvas() {
+  function initCanvas() {
     const rect = canvas.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-    
-    // Mantiene il contenuto tracciato durante il ridimensionamento
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.drawImage(canvas, 0, 0);
-
     canvas.width = rect.width * 2;
     canvas.height = rect.height * 2;
     ctx.scale(2, 2);
@@ -132,11 +130,12 @@
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = '#000080';
-
-    if (hasDrawn) {
-      ctx.drawImage(tempCanvas, 0, 0, rect.width, rect.height);
-    }
   }
+
+  window.addEventListener('load', initCanvas);
+  window.addEventListener('resize', () => {
+    if (!hasDrawn) initCanvas();
+  });
 
   function getPos(e) {
     const rect = canvas.getBoundingClientRect();
@@ -158,6 +157,7 @@
     const pos = getPos(e);
     ctx.lineTo(pos.x, pos.y);
     ctx.stroke();
+    e.preventDefault();
   }
 
   function stopDrawing() { isDrawing = false; }
@@ -166,8 +166,8 @@
   canvas.addEventListener('mousemove', draw);
   canvas.addEventListener('mouseup', stopDrawing);
 
-  canvas.addEventListener('touchstart', startDrawing);
-  canvas.addEventListener('touchmove', draw);
+  canvas.addEventListener('touchstart', startDrawing, { passive: false });
+  canvas.addEventListener('touchmove', draw, { passive: false });
   canvas.addEventListener('touchend', stopDrawing);
 
   function clearCanvas() {
@@ -183,7 +183,7 @@
     }
 
     if (!scriptUrl) {
-      alert("Errore: URL API mancante.");
+      alert("Errore: URL API mancante nei parametri.");
       return;
     }
 
@@ -204,18 +204,15 @@
       })
     }).then(() => {
       statusDiv.style.color = '#28a745';
-      statusDiv.innerHTML = "✅ Registrata!";
+      statusDiv.innerHTML = "✅ Firma inviata con successo!";
       setTimeout(() => {
-        alert("Firma inviata con successo! Puoi chiudere questa pagina.");
+        alert("Firma salvata correttamente su Google Drive. Puoi chiudere questa schermata.");
       }, 300);
     }).catch(err => {
       statusDiv.style.color = 'red';
-      statusDiv.innerText = "Errore invio!";
+      statusDiv.innerText = "Errore durante l'invio. Riprova.";
     });
   }
-
-  // Controllo iniziale al caricamento
-  checkOrientation();
 </script>
 </body>
 </html>
