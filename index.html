@@ -6,15 +6,21 @@
   <title>Firma Digitale Docente - UniMol</title>
   <style>
     * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
-    body { 
+    html, body { 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
       background: #f4f6f9; 
       color: #333; 
-      padding: 12px;
-      min-height: 100vh;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto; /* Permette lo scroll se lo schermo è molto basso */
+    }
+    
+    body {
+      padding: 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
     }
     
     .card { 
@@ -22,24 +28,26 @@
       border-radius: 12px; 
       box-shadow: 0 4px 14px rgba(0,0,0,0.08); 
       width: 100%; 
-      max-width: 600px; 
-      padding: 16px; 
+      max-width: 650px; 
+      padding: 12px 16px; 
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
     }
 
     .header-info { text-align: center; }
-    .header-info h2 { font-size: 17px; color: #003366; margin-bottom: 2px; }
-    .header-info p { font-size: 12px; color: #666; }
+    .header-info h2 { font-size: 16px; color: #003366; }
+    .header-info p { font-size: 11px; color: #666; }
 
-    /* Riquadro canvas fisso in formato orizzontale (rettangolare allungato) */
+    /* Canvas flessibile: si adatta all'altezza dello schermo */
     .canvas-container { 
       border: 2px dashed #003366; 
       border-radius: 8px; 
       background: #ffffff; 
       width: 100%; 
-      height: 220px; 
+      height: 45vh; /* Usa il 45% dell'altezza dello schermo disponibile */
+      min-height: 140px;
+      max-height: 280px;
       position: relative;
       touch-action: none;
     }
@@ -52,36 +60,42 @@
       display: block;
     }
 
-    /* Pulsanti sempre visibili e ben distanziati */
     .btn-group { 
       display: flex; 
-      gap: 12px; 
+      gap: 10px; 
       width: 100%;
       margin-top: 4px;
     }
     
     button { 
       flex: 1; 
-      padding: 14px; 
+      padding: 12px; 
       border: none; 
       border-radius: 8px; 
       font-weight: bold; 
-      font-size: 15px; 
+      font-size: 14px; 
       cursor: pointer; 
       touch-action: manipulation;
     }
     
     .btn-clear { background: #e2e8f0; color: #4a5568; }
-    .btn-clear:active { background: #cbd5e0; }
-    
     .btn-send { background: #28a745; color: #ffffff; }
-    .btn-send:active { background: #218838; }
 
     #status { 
       text-align: center; 
       font-weight: bold; 
-      font-size: 13px; 
-      min-height: 18px;
+      font-size: 12px; 
+      min-height: 16px;
+    }
+
+    /* Ottimizzazione specifica quando il telefono viene ruotato in orizzontale */
+    @media (orientation: landscape) and (max-height: 500px) {
+      body { padding: 5px; justify-content: flex-start; }
+      .card { padding: 8px 12px; gap: 4px; }
+      .header-info h2 { font-size: 14px; }
+      .header-info p { display: none; } /* Nasconde il sottotitolo per guadagnare spazio */
+      .canvas-container { height: 55vh; min-height: 120px; }
+      button { padding: 8px; font-size: 13px; }
     }
   </style>
 </head>
@@ -90,7 +104,7 @@
   <div class="card">
     <div class="header-info">
       <h2 id="docenteTitle">✍️ Firma Attestato UniMol</h2>
-      <p id="insegnamentoSub">Traccia la tua firma con il dito nel riquadro orizzontale</p>
+      <p id="insegnamentoSub">Traccia la tua firma con il dito nel riquadro sottostante</p>
     </div>
 
     <div class="canvas-container">
@@ -123,6 +137,8 @@
 
   function initCanvas() {
     const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    
     canvas.width = rect.width * 2;
     canvas.height = rect.height * 2;
     ctx.scale(2, 2);
@@ -135,6 +151,9 @@
   window.addEventListener('load', initCanvas);
   window.addEventListener('resize', () => {
     if (!hasDrawn) initCanvas();
+  });
+  window.addEventListener('orientationchange', () => {
+    setTimeout(initCanvas, 200);
   });
 
   function getPos(e) {
@@ -183,7 +202,7 @@
     }
 
     if (!scriptUrl) {
-      alert("Errore: URL API mancante nei parametri.");
+      alert("Errore: URL API mancante.");
       return;
     }
 
